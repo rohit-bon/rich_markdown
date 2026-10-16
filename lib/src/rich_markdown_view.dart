@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
@@ -6,11 +5,7 @@ import 'package:markdown/markdown.dart' as md;
 
 import 'latex_processor.dart';
 
-enum ContentType {
-  markdown,
-  latex,
-  html,
-}
+enum ContentType { markdown, latex, html }
 
 class RichMarkdownView extends StatelessWidget {
   const RichMarkdownView({
@@ -34,13 +29,14 @@ class RichMarkdownView extends StatelessWidget {
 
     final htmlData = switch (type) {
       ContentType.markdown => md.markdownToHtml(
-          processed,
-          extensionSet: md.ExtensionSet.gitHubWeb,
-        ),
+        processed,
+        extensionSet: md.ExtensionSet.gitHubWeb,
+      ),
       ContentType.html => processed,
-      ContentType.latex => '<texblock>'
-          '${LatexProcessor.encode(data)}'
-          '</texblock>',
+      ContentType.latex =>
+        '<texblock>'
+            '${LatexProcessor.encode(data)}'
+            '</texblock>',
     };
 
     return Html(
@@ -52,19 +48,16 @@ class RichMarkdownView extends StatelessWidget {
       style: {
         'body': Style(
           margin: Margins.zero,
-          fontSize: FontSize(
-            textStyle?.fontSize ?? 16,
-          ),
+          fontSize: FontSize(textStyle?.fontSize ?? 16),
           color: textStyle?.color,
           fontFamily: textStyle?.fontFamily,
         ),
-        'p': Style(
-          lineHeight: const LineHeight(1.5),
-        ),
+        'p': Style(lineHeight: const LineHeight(1.5)),
         'pre': Style(
           padding: HtmlPaddings.all(12),
-          backgroundColor: Theme.of(context)
-              .colorScheme.surfaceContainerHighest,
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest,
           whiteSpace: WhiteSpace.pre,
         ),
       },
@@ -72,19 +65,13 @@ class RichMarkdownView extends StatelessWidget {
         TagExtension(
           tagsToExtend: {'tex'},
           builder: (extensionContext) {
-            return _buildMath(
-              extensionContext.innerHtml,
-              block: false,
-            );
+            return _buildMath(extensionContext.innerHtml, block: false);
           },
         ),
         TagExtension(
           tagsToExtend: {'texblock'},
           builder: (extensionContext) {
-            return _buildMath(
-              extensionContext.innerHtml,
-              block: true,
-            );
+            return _buildMath(extensionContext.innerHtml, block: true);
           },
         ),
       ],
@@ -97,8 +84,7 @@ class RichMarkdownView extends StatelessWidget {
 
       return Math.tex(
         tex,
-        mathStyle:
-            block ? MathStyle.display : MathStyle.text,
+        mathStyle: block ? MathStyle.display : MathStyle.text,
         textStyle: textStyle,
         onErrorFallback: (error) {
           return Text(
