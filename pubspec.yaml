@@ -1,7 +1,9 @@
 name: rich_markdown
 description: "A Flutter package for rendering Markdown, LaTeX, and HTML content."
 version: 0.1.0
-homepage:
+
+homepage: https://github.com/rohit-bon/rich_markdown
+repository: https://github.com/rohit-bon/rich_markdown
 
 environment:
   sdk: ^3.12.2
