@@ -19,7 +19,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  rich_markdown: ^0.1.0
+  rich_markdown: ^1.0.0
 ```
 
 Then run:
@@ -68,43 +68,71 @@ RichMarkdownView(
 
 ### 1. Markdown Rendering
 
-![Markdown rendering screenshot](screenshots/markdown.png)
+<img
+  src="https://raw.githubusercontent.com/rohit-bon/rich_markdown_assets/main/images/MarkdownRendering.png"
+  alt="Markdown rendering screenshot"
+  height="500"
+/>
 
 Displays Markdown formatting, headings, lists, links, and blockquotes.
 
 ### 2. Inline LaTeX
 
-![Inline LaTeX screenshot](screenshots/inline-latex.png)
+<img
+  src="https://raw.githubusercontent.com/rohit-bon/rich_markdown_assets/main/images/InlineLatex.png"
+  alt="Inline LaTeX screenshot"
+  height="500"
+/>
 
 Render mathematical expressions directly within paragraphs.
 
 ### 3. Block LaTeX
 
-![Block LaTeX screenshot](screenshots/block-latex.png)
+<img
+  src="https://raw.githubusercontent.com/rohit-bon/rich_markdown_assets/main/images/BlockLatex.png"
+  alt="Block LaTeX screenshot"
+  height="500"
+/>
 
 Display equations such as integrals, fractions, summations, and quadratic formulas.
 
 ### 4. HTML Rendering
 
-![HTML rendering screenshot](screenshots/html.png)
+<img
+  src="https://raw.githubusercontent.com/rohit-bon/rich_markdown_assets/main/images/HtmlRendering.png"
+  alt="HTML rendering screenshot"
+  height="500"
+/>
 
 Render HTML elements, including paragraphs, lists, emphasis, links, and supported custom math tags.
 
 ### 5. Code and LaTeX Handling
 
-![Code protection screenshot](screenshots/code-protection.png)
+<img
+  src="https://raw.githubusercontent.com/rohit-bon/rich_markdown_assets/main/images/CodeLatex.png"
+  alt="Code protection screenshot"
+  height="500"
+/>
 
 Test code blocks and inline code containing LaTeX-like expressions.
 
 ### 6. Currency and Symbols
 
-![Currency and symbols screenshot](screenshots/currency.png)
+<img
+  src="https://raw.githubusercontent.com/rohit-bon/rich_markdown_assets/main/images/CurrencySymbols.png"
+  alt="Currency and symbols screenshot"
+  height="500"
+/>
 
 Test currency values, escaped dollar signs, and inline mathematical expressions.
 
 ### 7. Incomplete Equations
 
-![Incomplete equation screenshot](screenshots/incomplete-equation.png)
+<img
+  src="https://raw.githubusercontent.com/rohit-bon/rich_markdown_assets/main/images/IncompleteEquations.png"
+  alt="Incomplete equation screenshot"
+  height="500"
+/>
 
 Test how unfinished equations are handled while content is being generated.
 
@@ -112,7 +140,11 @@ Test how unfinished equations are handled while content is being generated.
 
 Watch Rich Markdown render progressively updated AI-style responses containing Markdown and LaTeX.
 
-![Rich Markdown streaming demo](screenshots/streaming-demo.gif)
+<img
+  src="https://raw.githubusercontent.com/rohit-bon/rich_markdown_assets/main/gifs/AiStreaming.gif"
+  alt="Rich Markdown streaming demo"
+  height="500"
+/>
 
 The animation demonstrates simulated streaming in the example application. Actual streaming behavior depends on how your application supplies updated content and how incomplete Markdown and LaTeX expressions are handled.
 
@@ -219,7 +251,7 @@ RichMarkdownView(
 Explore the example application to try different content types and test mathematical expressions.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/rich_markdown.git
+git clone https://github.com/rohit-bon/rich_markdown.git
 cd rich_markdown/example
 flutter pub get
 flutter run
