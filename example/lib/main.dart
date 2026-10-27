@@ -267,7 +267,7 @@ This response is being added gradually to simulate an AI chat.
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: selectedExample,
+              initialValue: selectedExample,
               decoration: const InputDecoration(border: OutlineInputBorder()),
               items: markdownExamples.keys.map((example) {
                 return DropdownMenuItem(value: example, child: Text(example));
