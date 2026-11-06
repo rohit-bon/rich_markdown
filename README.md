@@ -19,7 +19,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  rich_markdown: ^1.0.0
+  rich_markdown: ^1.1.0
 ```
 
 Then run:
@@ -63,6 +63,23 @@ RichMarkdownView(
   ),
 )
 ```
+
+### 📐 Supported LaTeX Syntax
+
+| Syntax | Example | Type | Description |
+|---|---|---|---|
+| `$...$` | `$x^2$` | Inline | Standard inline math |
+| `$$...$$` | `$$x^2$$` | Block | Display / block equation |
+| `\(...\)` | `\(x^2\)` | Inline | LaTeX parenthesized inline math |
+| `\[...\]` | `\[x^2\]` | Block | LaTeX bracketed display math |
+
+#### 🛡️ Robust Edge Case Handling:
+- **Code Block Isolation**: LaTeX expressions inside fenced code blocks (` ``` ` or `~~~`), inline code spans (`` `...` ``), and HTML `<pre>` / `<code>` tags remain literal code.
+- **Currency Protection**: Currency values such as `$100`, `$100.50`, `$10-$20`, and `$10, $20, and $30` are preserved as literal text.
+- **Escaped Delimiters**: Delimiters preceded by backslashes (like `\$` or `\(`) do not start equations.
+- **Streaming-Safe**: Incomplete expressions (e.g. `$x +` or `$$\frac{1}{2}`) remain text without crashing or throwing exceptions.
+- **Multiple Equations**: Multiple expressions in the same paragraph parse and render independently.
+- **Multiline Block Equations**: Equations spanning across line breaks work smoothly with both `$$` and `\[`.
 
 ## 📸 Screenshots
 
@@ -237,6 +254,7 @@ RichMarkdownView(
 | `textStyle` | `TextStyle?` | `null` | Text styling |
 | `onLinkTap` | `void Function(String? url)?` | `null` | Link tap callback |
 | `shrinkWrap` | `bool` | `true` | Controls HTML content shrink wrapping |
+| `mathErrorBuilder` | `Widget Function(BuildContext, String, String)?` | `null` | Custom fallback builder for malformed LaTeX |
 
 ### `ContentType`
 
@@ -245,6 +263,25 @@ RichMarkdownView(
 | `ContentType.markdown` | Renders Markdown and supported LaTeX expressions |
 | `ContentType.latex` | Renders the input as a block LaTeX expression |
 | `ContentType.html` | Renders HTML with supported custom math tags |
+
+## 🧩 Modular Architecture (Separating Parsing from Rendering)
+
+Rich Markdown separates parsing logic from UI rendering:
+
+- **`LatexTokenizer`**: Streaming-safe tokenizer that converts raw text into `List<LatexToken>`.
+- **`LatexToken`**: Token data model representing `LatexTokenType.text`, `inlineMath`, or `blockMath`.
+- **`LatexProcessor`**: Base64 encoding/decoding and converting LaTeX into HTML `<tex>` / `<texblock>` tags.
+- **`MarkdownProcessor`**: Converts Markdown or HTML strings to HTML with protected LaTeX equations without needing a Flutter `BuildContext`.
+
+```dart
+import 'package:rich_markdown/rich_markdown.dart';
+
+// Tokenize raw text directly:
+final tokens = LatexTokenizer.tokenize(r'Formula: $E = mc^2$ and $100');
+
+// Process Markdown to HTML without rendering:
+final html = MarkdownProcessor.process(r'# Analysis of $f(x)$');
+```
 
 ## 🧪 Example App
 

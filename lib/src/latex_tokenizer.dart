@@ -1,18 +1,22 @@
-enum LatexTokenType { text, inlineMath, blockMath }
+import 'models/latex_token.dart';
 
-class LatexToken {
-  const LatexToken({required this.type, required this.content});
+export 'models/latex_token.dart';
 
-  final LatexTokenType type;
-  final String content;
-
-  bool get isMath => type != LatexTokenType.text;
-}
-
+/// A robust tokenizer that parses text containing inline and block LaTeX expressions
+/// while preserving Markdown fenced code blocks, inline code, HTML code tags,
+/// currency values, and escaped delimiters.
 class LatexTokenizer {
   LatexTokenizer._();
 
+  /// Tokenizes [source] into a list of [LatexToken]s.
+  ///
+  /// This method is streaming-safe: incomplete expressions remain as text tokens
+  /// without throwing exceptions.
   static List<LatexToken> tokenize(String source) {
+    if (source.isEmpty) {
+      return const [];
+    }
+
     final tokens = <LatexToken>[];
     final text = StringBuffer();
 
@@ -28,7 +32,7 @@ class LatexTokenizer {
     var i = 0;
 
     while (i < source.length) {
-      // Preserve fenced Markdown code blocks.
+      // 1. Preserve fenced Markdown code blocks (``` or ~~~).
       final fenceEnd = _fencedCodeEnd(source, i);
       if (fenceEnd != null) {
         text.write(source.substring(i, fenceEnd));
@@ -36,7 +40,7 @@ class LatexTokenizer {
         continue;
       }
 
-      // Preserve inline Markdown code spans.
+      // 2. Preserve inline Markdown code spans (`...`).
       final codeEnd = _inlineCodeEnd(source, i);
       if (codeEnd != null) {
         text.write(source.substring(i, codeEnd));
@@ -44,13 +48,29 @@ class LatexTokenizer {
         continue;
       }
 
-      // Don't interpret escaped delimiters as math.
-      if (source[i] == '\\' && i + 1 < source.length && source[i + 1] == r'$') {
-        text.write(source.substring(i, i + 2));
-        i += 2;
+      // 3. Preserve HTML code blocks (<pre>...</pre> and <code>...</code>).
+      final htmlCodeEnd = _htmlCodeEnd(source, i);
+      if (htmlCodeEnd != null) {
+        text.write(source.substring(i, htmlCodeEnd));
+        i = htmlCodeEnd;
         continue;
       }
 
+      // 4. Handle escaped delimiters (e.g. \$).
+      if (source[i] == r'\' && i + 1 < source.length) {
+        final nextChar = source[i + 1];
+        if (nextChar == r'$') {
+          // Check if this backslash is itself escaped.
+          if (!_isEscaped(source, i)) {
+            // Literal escaped dollar sign: \$
+            text.write(r'\$');
+            i += 2;
+            continue;
+          }
+        }
+      }
+
+      // 5. Look for LaTeX equations ($...$, $$...$$, \(...\), \[...\]).
       final match = _findMath(source, i);
 
       if (match == null) {
@@ -83,17 +103,25 @@ class LatexTokenizer {
     var block = false;
 
     if (source.startsWith(r'$$', start)) {
+      if (_isEscaped(source, start)) return null;
       opening = r'$$';
       closing = r'$$';
       block = true;
     } else if (source.startsWith(r'\[', start)) {
+      if (_isEscaped(source, start)) return null;
       opening = r'\[';
       closing = r'\]';
       block = true;
     } else if (source.startsWith(r'\(', start)) {
+      if (_isEscaped(source, start)) return null;
       opening = r'\(';
       closing = r'\)';
     } else if (source[start] == r'$') {
+      if (_isEscaped(source, start)) return null;
+      // Opening $ must not be preceded by a digit (e.g. 100$).
+      if (start > 0 && _isDigit(source[start - 1])) {
+        return null;
+      }
       opening = r'$';
       closing = r'$';
     }
@@ -108,30 +136,50 @@ class LatexTokenizer {
       return null;
     }
 
-    // Inline formulas should not start with whitespace.
-    if (!block && _isWhitespace(source[contentStart])) {
-      return null;
-    }
-
-    // Avoid treating common currency values such as $100 as math.
-    if (opening == r'$' && _isDigit(source[contentStart])) {
+    // Single $ inline formulas must not start with whitespace.
+    if (opening == r'$' && _isWhitespace(source[contentStart])) {
       return null;
     }
 
     var cursor = contentStart;
 
     while (cursor < source.length) {
+      // Inline math cannot cross newlines.
       if (!block && source[cursor] == '\n') {
         return null;
       }
 
       if (source.startsWith(closing, cursor) && !_isEscaped(source, cursor)) {
+        // Equation cannot be empty (e.g. $$$$ or \(\) or \[\]).
         if (cursor == contentStart) {
           return null;
         }
 
-        if (!block && _isWhitespace(source[cursor - 1])) {
+        final rawContent = source.substring(contentStart, cursor);
+
+        // Content cannot be purely whitespace.
+        if (rawContent.trim().isEmpty) {
           return null;
+        }
+
+        // Single $ inline formulas must not end with whitespace.
+        if (opening == r'$' && _isWhitespace(source[cursor - 1])) {
+          return null;
+        }
+
+        // Closing $ cannot be followed by a digit (prevents $10-$20 or $100 to $200).
+        if (opening == r'$' &&
+            cursor + 1 < source.length &&
+            _isDigit(source[cursor + 1])) {
+          return null;
+        }
+
+        // Avoid treating currency followed by English prose as math.
+        // e.g. "$100 and more text$"
+        if (opening == r'$' && _isDigit(source[contentStart])) {
+          if (_looksLikeCurrencyProse(rawContent)) {
+            return null;
+          }
         }
 
         return _MathMatch(
@@ -145,8 +193,18 @@ class LatexTokenizer {
       cursor++;
     }
 
-    // Incomplete equations remain ordinary text during streaming.
+    // Incomplete equations remain ordinary text (streaming-safe).
     return null;
+  }
+
+  static bool _looksLikeCurrencyProse(String content) {
+    // If it starts with digits and contains spaces without any math operators,
+    // it's likely currency followed by regular prose.
+    final hasMathOperators = RegExp(r'[+\-*\/=^_\\<>]').hasMatch(content);
+    if (!hasMathOperators && content.contains(' ')) {
+      return true;
+    }
+    return false;
   }
 
   static int? _fencedCodeEnd(String source, int start) {
@@ -160,7 +218,8 @@ class LatexTokenizer {
     final endOfLine = lineEnd == -1 ? source.length : lineEnd;
 
     final line = source.substring(start, endOfLine);
-    final indent = RegExp(r'^ {0,3}').firstMatch(line)!.end;
+    final indentMatch = RegExp(r'^ {0,3}').firstMatch(line);
+    final indent = indentMatch?.end ?? 0;
     final rest = line.substring(indent);
 
     if (!rest.startsWith('```') && !rest.startsWith('~~~')) {
@@ -187,6 +246,7 @@ class LatexTokenizer {
     final closing = closingPattern.firstMatch(remainingSource);
 
     if (closing == null) {
+      // Unclosed code block consumes until end of source (streaming safe).
       return source.length;
     }
 
@@ -211,11 +271,33 @@ class LatexTokenizer {
     return end + runLength;
   }
 
+  static int? _htmlCodeEnd(String source, int start) {
+    if (source[start] != '<') return null;
+
+    final lower = source.substring(start).toLowerCase();
+    String? closingTag;
+
+    if (lower.startsWith('<pre>') || lower.startsWith('<pre ')) {
+      closingTag = '</pre>';
+    } else if (lower.startsWith('<code>') || lower.startsWith('<code ')) {
+      closingTag = '</code>';
+    }
+
+    if (closingTag == null) return null;
+
+    final closingIndex = lower.indexOf(closingTag);
+    if (closingIndex == -1) {
+      return source.length;
+    }
+
+    return start + closingIndex + closingTag.length;
+  }
+
   static bool _isEscaped(String source, int index) {
     var count = 0;
     var i = index - 1;
 
-    while (i >= 0 && source[i] == '\\') {
+    while (i >= 0 && source[i] == r'\') {
       count++;
       i--;
     }

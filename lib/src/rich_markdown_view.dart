@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
-import 'package:markdown/markdown.dart' as md;
 
 import 'latex_processor.dart';
-import 'latex_tokenizer.dart';
+import 'markdown_processor.dart';
 
 enum ContentType { markdown, latex, html }
 
+/// A Flutter widget that renders Markdown, LaTeX, and HTML content with robust
+/// math parsing, streaming resilience, and customizable styling.
 class RichMarkdownView extends StatelessWidget {
   const RichMarkdownView({
     super.key,
@@ -16,21 +17,36 @@ class RichMarkdownView extends StatelessWidget {
     this.textStyle,
     this.onLinkTap,
     this.shrinkWrap = true,
+    this.mathErrorBuilder,
   });
 
+  /// The raw content string to render.
   final String data;
+
+  /// The format of the content ([ContentType.markdown], [ContentType.latex], or [ContentType.html]).
   final ContentType type;
+
+  /// Default text style applied to rendered text.
   final TextStyle? textStyle;
+
+  /// Optional callback invoked when a hyperlink is tapped.
   final void Function(String? url)? onLinkTap;
+
+  /// Whether the HTML view should shrink-wrap its contents.
   final bool shrinkWrap;
+
+  /// Optional custom builder for displaying LaTeX syntax or parsing errors.
+  /// If omitted, a red text fallback is shown.
+  final Widget Function(BuildContext context, String error, String tex)?
+      mathErrorBuilder;
 
   @override
   Widget build(BuildContext context) {
     final htmlData = switch (type) {
-      ContentType.markdown => _markdownToHtml(data),
-      ContentType.html => _htmlWithMath(data),
+      ContentType.markdown => MarkdownProcessor.process(data),
+      ContentType.html => MarkdownProcessor.processHtml(data),
       ContentType.latex =>
-        '<texblock>${LatexProcessor.encode(data)}</texblock>',
+        '<texblock>${LatexProcessor.encode(data.trim())}</texblock>',
     };
 
     return Html(
@@ -58,79 +74,36 @@ class RichMarkdownView extends StatelessWidget {
       extensions: [
         TagExtension(
           tagsToExtend: {'tex'},
-          builder: (extensionContext) =>
-              _buildMath(extensionContext.innerHtml, block: false),
+          builder: (extensionContext) => _buildMath(
+            context,
+            extensionContext.innerHtml,
+            block: false,
+          ),
         ),
         TagExtension(
           tagsToExtend: {'texblock'},
-          builder: (extensionContext) =>
-              _buildMath(extensionContext.innerHtml, block: true),
+          builder: (extensionContext) => _buildMath(
+            context,
+            extensionContext.innerHtml,
+            block: true,
+          ),
         ),
       ],
     );
   }
 
-  String _markdownToHtml(String source) {
-    final protectedSource = _protectMath(source);
+  Widget _buildMath(BuildContext context, String encoded, {required bool block}) {
+    final tex = LatexProcessor.decode(encoded);
 
-    final converted = md.markdownToHtml(
-      protectedSource.content,
-      extensionSet: md.ExtensionSet.gitHubWeb,
-    );
-
-    return _restoreMath(converted, protectedSource.mathTags);
-  }
-
-  String _htmlWithMath(String source) {
-    final protectedSource = _protectMath(source);
-    return _restoreMath(protectedSource.content, protectedSource.mathTags);
-  }
-
-  _ProtectedMath _protectMath(String source) {
-    final tokens = LatexTokenizer.tokenize(source);
-    final output = StringBuffer();
-    final mathTags = <String, String>{};
-
-    var index = 0;
-
-    for (final token in tokens) {
-      if (!token.isMath) {
-        output.write(token.content);
-        continue;
-      }
-
-      final placeholder = 'RICHMATHPLACEHOLDER${index}END';
-      final tag = token.type == LatexTokenType.blockMath ? 'texblock' : 'tex';
-
-      mathTags[placeholder] =
-          '<$tag>${LatexProcessor.encode(token.content)}</$tag>';
-
-      output.write(placeholder);
-      index++;
-    }
-
-    return _ProtectedMath(output.toString(), mathTags);
-  }
-
-  String _restoreMath(String html, Map<String, String> mathTags) {
-    var result = html;
-
-    for (final entry in mathTags.entries) {
-      result = result.replaceAll(entry.key, entry.value);
-    }
-
-    return result;
-  }
-
-  Widget _buildMath(String encoded, {required bool block}) {
     try {
-      final tex = LatexProcessor.decode(encoded.trim());
-
       return Math.tex(
         tex,
         mathStyle: block ? MathStyle.display : MathStyle.text,
         textStyle: textStyle,
         onErrorFallback: (error) {
+          if (mathErrorBuilder != null) {
+            return mathErrorBuilder!(context, error.message, tex);
+          }
           return Text(
             tex,
             style:
@@ -139,20 +112,16 @@ class RichMarkdownView extends StatelessWidget {
           );
         },
       );
-    } catch (_) {
+    } catch (e) {
+      if (mathErrorBuilder != null) {
+        return mathErrorBuilder!(context, e.toString(), tex);
+      }
       return Text(
-        encoded,
+        tex,
         style:
             textStyle?.copyWith(color: Colors.red) ??
             const TextStyle(color: Colors.red),
       );
     }
   }
-}
-
-class _ProtectedMath {
-  const _ProtectedMath(this.content, this.mathTags);
-
-  final String content;
-  final Map<String, String> mathTags;
 }
