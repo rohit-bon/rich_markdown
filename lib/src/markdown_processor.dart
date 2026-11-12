@@ -12,10 +12,7 @@ class MarkdownProcessor {
   /// Mathematical expressions are shielded from Markdown parsing (preventing underscores,
   /// asterisks, and delimiters from being misinterpreted as Markdown formatting) and then
   /// restored as `<tex>` and `<texblock>` custom HTML tags with Base64-encoded LaTeX content.
-  static String process(
-    String markdown, {
-    md.ExtensionSet? extensionSet,
-  }) {
+  static String process(String markdown, {md.ExtensionSet? extensionSet}) {
     if (markdown.isEmpty) return '';
 
     final protected = _protectMath(markdown);

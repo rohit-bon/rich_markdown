@@ -1,15 +1,8 @@
-enum LatexTokenType {
-  text,
-  inlineMath,
-  blockMath,
-}
+enum LatexTokenType { text, inlineMath, blockMath }
 
 /// Represents a parsed token within a text containing potential LaTeX expressions.
 class LatexToken {
-  const LatexToken({
-    required this.type,
-    required this.content,
-  });
+  const LatexToken({required this.type, required this.content});
 
   /// The type of this token (text, inline math, or block math).
   final LatexTokenType type;
@@ -35,4 +28,3 @@ class LatexToken {
   @override
   String toString() => 'LatexToken(type: $type, content: $content)';
 }
-

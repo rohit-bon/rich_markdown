@@ -21,7 +21,9 @@ void main() {
       expect(find.byType(RichMarkdownView), findsOneWidget);
     });
 
-    testWidgets('renders Markdown with inline and block LaTeX math', (tester) async {
+    testWidgets('renders Markdown with inline and block LaTeX math', (
+      tester,
+    ) async {
       const content = r'''
 Formula: $E = mc^2$
 
@@ -33,10 +35,7 @@ $$
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: RichMarkdownView(
-              data: content,
-              type: ContentType.markdown,
-            ),
+            body: RichMarkdownView(data: content, type: ContentType.markdown),
           ),
         ),
       );
@@ -52,10 +51,7 @@ $$
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: RichMarkdownView(
-              data: formula,
-              type: ContentType.latex,
-            ),
+            body: RichMarkdownView(data: formula, type: ContentType.latex),
           ),
         ),
       );
@@ -71,10 +67,7 @@ $$
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: RichMarkdownView(
-              data: htmlContent,
-              type: ContentType.html,
-            ),
+            body: RichMarkdownView(data: htmlContent, type: ContentType.html),
           ),
         ),
       );
@@ -84,7 +77,9 @@ $$
       expect(find.byType(Math), findsOneWidget);
     });
 
-    testWidgets('gracefully handles malformed LaTeX with fallback widget', (tester) async {
+    testWidgets('gracefully handles malformed LaTeX with fallback widget', (
+      tester,
+    ) async {
       // Malformed LaTeX that flutter_math cannot parse
       const brokenContent = r'$\frac{broken$';
 
@@ -104,32 +99,37 @@ $$
       expect(find.byType(RichMarkdownView), findsOneWidget);
     });
 
-    testWidgets('uses custom mathErrorBuilder when LaTeX expression is malformed', (tester) async {
-      const invalidLatex = r'$\unknownMacroWithSyntaxError{{{}$';
-      var customErrorCalled = false;
+    testWidgets(
+      'uses custom mathErrorBuilder when LaTeX expression is malformed',
+      (tester) async {
+        const invalidLatex = r'$\unknownMacroWithSyntaxError{{{}$';
+        var customErrorCalled = false;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: RichMarkdownView(
-              data: invalidLatex,
-              type: ContentType.markdown,
-              mathErrorBuilder: (context, error, tex) {
-                customErrorCalled = true;
-                return Text('CustomError: $tex');
-              },
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: RichMarkdownView(
+                data: invalidLatex,
+                type: ContentType.markdown,
+                mathErrorBuilder: (context, error, tex) {
+                  customErrorCalled = true;
+                  return Text('CustomError: $tex');
+                },
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.byType(RichMarkdownView), findsOneWidget);
-      expect(customErrorCalled, isTrue);
-      expect(find.textContaining('CustomError:'), findsOneWidget);
-    });
+        expect(find.byType(RichMarkdownView), findsOneWidget);
+        expect(customErrorCalled, isTrue);
+        expect(find.textContaining('CustomError:'), findsOneWidget);
+      },
+    );
 
-    testWidgets('handles simulated progressive streaming without crashes', (tester) async {
+    testWidgets('handles simulated progressive streaming without crashes', (
+      tester,
+    ) async {
       final streamStates = [
         'The result is ',
         r'The result is $',
@@ -142,10 +142,7 @@ $$
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: RichMarkdownView(
-                data: text,
-                type: ContentType.markdown,
-              ),
+              body: RichMarkdownView(data: text, type: ContentType.markdown),
             ),
           ),
         );
@@ -154,7 +151,9 @@ $$
       }
     });
 
-    testWidgets('applies custom textStyle and link callbacks properly', (tester) async {
+    testWidgets('applies custom textStyle and link callbacks properly', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

@@ -95,18 +95,21 @@ x = "$y = 2$"
       expect(tokens.single.content, input);
     });
 
-    test('does not parse math inside indented fenced code blocks (up to 3 spaces)', () {
-      const input = r'''
+    test(
+      'does not parse math inside indented fenced code blocks (up to 3 spaces)',
+      () {
+        const input = r'''
    ```dart
    final x = '$y$';
    ```
 ''';
 
-      final tokens = LatexTokenizer.tokenize(input);
+        final tokens = LatexTokenizer.tokenize(input);
 
-      expect(tokens, hasLength(1));
-      expect(tokens.single.type, LatexTokenType.text);
-    });
+        expect(tokens, hasLength(1));
+        expect(tokens.single.type, LatexTokenType.text);
+      },
+    );
 
     test('does not parse math inside inline code spans', () {
       final tokens = LatexTokenizer.tokenize(r'Use `$x$` and `$$y$$` in code.');
@@ -161,9 +164,7 @@ x = "$y = 2$"
     });
 
     test('preserves comma-separated currency list', () {
-      final tokens = LatexTokenizer.tokenize(
-        r'Tiers are $10, $20, and $30.',
-      );
+      final tokens = LatexTokenizer.tokenize(r'Tiers are $10, $20, and $30.');
 
       expect(tokens.any((t) => t.isMath), isFalse);
     });
@@ -273,10 +274,7 @@ x = "$y = 2$"
       final tokens = LatexTokenizer.tokenize(r'Formula: \(x^2');
 
       expect(tokens, [
-        const LatexToken(
-          type: LatexTokenType.text,
-          content: r'Formula: \(x^2',
-        ),
+        const LatexToken(type: LatexTokenType.text, content: r'Formula: \(x^2'),
       ]);
     });
 
@@ -335,7 +333,9 @@ x = "$y = 2$"
 
   group('LatexTokenizer - Multiple Equations & Multiline', () {
     test('parses multiple equations in the same paragraph', () {
-      final tokens = LatexTokenizer.tokenize(r'Given $x = 1$, $y = 2$, and $z = 3$.');
+      final tokens = LatexTokenizer.tokenize(
+        r'Given $x = 1$, $y = 2$, and $z = 3$.',
+      );
 
       expect(tokens, [
         const LatexToken(type: LatexTokenType.text, content: 'Given '),
@@ -374,9 +374,15 @@ x = "$y = 2$"
 
       final tokens = LatexTokenizer.tokenize(input);
 
-      expect(tokens.where((t) => t.type == LatexTokenType.blockMath), hasLength(1));
       expect(
-        tokens.firstWhere((t) => t.type == LatexTokenType.blockMath).content.trim(),
+        tokens.where((t) => t.type == LatexTokenType.blockMath),
+        hasLength(1),
+      );
+      expect(
+        tokens
+            .firstWhere((t) => t.type == LatexTokenType.blockMath)
+            .content
+            .trim(),
         r'\int_0^1 x^2\,dx = \frac{1}{3}',
       );
     });
@@ -393,9 +399,15 @@ y &= 2
 
       final tokens = LatexTokenizer.tokenize(input);
 
-      expect(tokens.where((t) => t.type == LatexTokenType.blockMath), hasLength(1));
       expect(
-        tokens.firstWhere((t) => t.type == LatexTokenType.blockMath).content.trim(),
+        tokens.where((t) => t.type == LatexTokenType.blockMath),
+        hasLength(1),
+      );
+      expect(
+        tokens
+            .firstWhere((t) => t.type == LatexTokenType.blockMath)
+            .content
+            .trim(),
         contains(r'x &= 1'),
       );
     });

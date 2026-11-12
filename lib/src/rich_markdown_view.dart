@@ -38,7 +38,7 @@ class RichMarkdownView extends StatelessWidget {
   /// Optional custom builder for displaying LaTeX syntax or parsing errors.
   /// If omitted, a red text fallback is shown.
   final Widget Function(BuildContext context, String error, String tex)?
-      mathErrorBuilder;
+  mathErrorBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -74,25 +74,23 @@ class RichMarkdownView extends StatelessWidget {
       extensions: [
         TagExtension(
           tagsToExtend: {'tex'},
-          builder: (extensionContext) => _buildMath(
-            context,
-            extensionContext.innerHtml,
-            block: false,
-          ),
+          builder: (extensionContext) =>
+              _buildMath(context, extensionContext.innerHtml, block: false),
         ),
         TagExtension(
           tagsToExtend: {'texblock'},
-          builder: (extensionContext) => _buildMath(
-            context,
-            extensionContext.innerHtml,
-            block: true,
-          ),
+          builder: (extensionContext) =>
+              _buildMath(context, extensionContext.innerHtml, block: true),
         ),
       ],
     );
   }
 
-  Widget _buildMath(BuildContext context, String encoded, {required bool block}) {
+  Widget _buildMath(
+    BuildContext context,
+    String encoded, {
+    required bool block,
+  }) {
     final tex = LatexProcessor.decode(encoded);
 
     try {

@@ -19,8 +19,12 @@ void main() {
       stopwatch.stop();
 
       expect(tokens, isNotEmpty);
-      expect(stopwatch.elapsedMilliseconds, lessThan(1000),
-          reason: 'Tokenization of 1,000 mixed paragraphs took ${stopwatch.elapsedMilliseconds}ms');
+      expect(
+        stopwatch.elapsedMilliseconds,
+        lessThan(1000),
+        reason:
+            'Tokenization of 1,000 mixed paragraphs took ${stopwatch.elapsedMilliseconds}ms',
+      );
     });
 
     test('MarkdownProcessor processes 100 mixed Markdown documents rapidly', () {
@@ -51,9 +55,12 @@ And inline reference \(a^2 + b^2 = c^2\).
       }
       stopwatch.stop();
 
-      expect(stopwatch.elapsedMilliseconds, lessThan(2000),
-          reason: 'Processing 100 documents took ${stopwatch.elapsedMilliseconds}ms');
+      expect(
+        stopwatch.elapsedMilliseconds,
+        lessThan(2000),
+        reason:
+            'Processing 100 documents took ${stopwatch.elapsedMilliseconds}ms',
+      );
     });
   });
 }
-

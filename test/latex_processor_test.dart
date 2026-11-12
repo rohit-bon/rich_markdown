@@ -9,11 +9,15 @@ void main() {
       expect(LatexProcessor.decode(encoded), formula);
     });
 
-    test('encodes and decodes complex LaTeX with special symbols and Unicode', () {
-      const formula = r'\sum_{i=1}^n \sqrt{\alpha_i + \beta_i} \approx \pi \cdot \infty';
-      final encoded = LatexProcessor.encode(formula);
-      expect(LatexProcessor.decode(encoded), formula);
-    });
+    test(
+      'encodes and decodes complex LaTeX with special symbols and Unicode',
+      () {
+        const formula =
+            r'\sum_{i=1}^n \sqrt{\alpha_i + \beta_i} \approx \pi \cdot \infty';
+        final encoded = LatexProcessor.encode(formula);
+        expect(LatexProcessor.decode(encoded), formula);
+      },
+    );
 
     test('decodes standard base64 strings with padding safely', () {
       // Base64 for "x^2" is "eF4y"
@@ -52,7 +56,10 @@ void main() {
       final result = LatexProcessor.process(r'\[\int_0^\infty f(x)\,dx\]');
       expect(result, contains('<texblock>'));
       expect(result, contains('</texblock>'));
-      expect(result, contains(LatexProcessor.encode(r'\int_0^\infty f(x)\,dx')));
+      expect(
+        result,
+        contains(LatexProcessor.encode(r'\int_0^\infty f(x)\,dx')),
+      );
     });
 
     test('leaves ordinary text unchanged', () {
@@ -65,10 +72,13 @@ void main() {
       expect(LatexProcessor.process(input), input);
     });
 
-    test(r'preserves currency amounts like $100 without converting to tex tags', () {
-      const input = r'The item costs $100.';
-      expect(LatexProcessor.process(input), input);
-    });
+    test(
+      r'preserves currency amounts like $100 without converting to tex tags',
+      () {
+        const input = r'The item costs $100.';
+        expect(LatexProcessor.process(input), input);
+      },
+    );
 
     test('preserves escaped dollar signs without converting to tex tags', () {
       const input = r'Price is \$50.';
